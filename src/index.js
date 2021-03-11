@@ -1,4 +1,5 @@
 
+const { request } = require("express");
 const express = require("express");
 const { v4 : uuidv4 }  = require ("uuid")
 
@@ -14,6 +15,26 @@ app.use(express.json())
  */
 
 const customers = []
+
+//Middleware
+
+function verifyIfExistsAccountCPF(request, response, next){
+
+     //const { cpf } = request.params;
+     const { cpf } = request.headers;
+
+     const customer = customers.find((customer) => customer.cpf === cpf)
+ 
+     if(!customer){
+         return response.status(400).json('Nao existe nenhuma conta')
+     }
+ 
+     request.customer = customer;
+
+     return next()
+
+}
+
 
 
 app.post("/account", (request, response) =>{
@@ -40,25 +61,16 @@ app.post("/account", (request, response) =>{
 
 })
 
-app.get("/statement", (request, response) =>{
+//app.use(verifyIfExistsAccountCPF)
 
-    //const { cpf } = request.params;
-    const { cpf } = request.headers;
-
-    const customer = customers.find(customer => customer.cpf === cpf)
-
-    if(!customer){
-        return response.status(400).json('Nao existe nenhuma conta')
-    }
+app.get("/statement", verifyIfExistsAccountCPF, (request, response) =>{ 
+    
+    const { customer } = request;
 
     return response.json(customer.statment)
-
-
-
 
 })
 
 
-
-
 app.listen(3333)
+
