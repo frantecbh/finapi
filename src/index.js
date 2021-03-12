@@ -35,8 +35,23 @@ function verifyIfExistsAccountCPF(request, response, next){
 
 }
 
+function getBalance(statment){
+
+   const balance =  statment.reduce((acc,operation) =>{
+        if(operation.type === 'credit'){
+            return acc + operation.amount
+        }else{
+            return acc - operation.amount
+        }
+    }, 0)
+
+    return balance
 
 
+}
+
+
+//abre conta
 app.post("/account", (request, response) =>{
 
     const {cpf, name} = request.body;
@@ -63,6 +78,7 @@ app.post("/account", (request, response) =>{
 
 //app.use(verifyIfExistsAccountCPF)
 
+//estrato
 app.get("/statement", verifyIfExistsAccountCPF, (request, response) =>{ 
     
     const { customer } = request;
@@ -71,6 +87,7 @@ app.get("/statement", verifyIfExistsAccountCPF, (request, response) =>{
 
 });
 
+//deposito
 app.post("/deposit", verifyIfExistsAccountCPF, (request, response) =>{
 
     const { description, amount } = request.body;
@@ -89,6 +106,34 @@ app.post("/deposit", verifyIfExistsAccountCPF, (request, response) =>{
 
 
     return response.status(201).send();
+
+
+})
+
+
+//saque
+app.post("/withtraw", verifyIfExistsAccountCPF, (request, response) =>{
+
+        const {amount} = request.body;
+        const {customer} = request;
+
+
+        const balance = getBalance(customer.statment)
+
+
+        if(balance < amount){
+            return response.status(400).json({error: "Saldo Insuficiente!"})
+        }
+
+        const statementOperation = {
+            amount,
+            created_at: new Date(),
+            type: "debit"
+        }
+
+        customer.statment.push(statementOperation);
+
+        return response.status(201).send();
 
 
 })
