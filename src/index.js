@@ -138,6 +138,22 @@ app.post("/withtraw", verifyIfExistsAccountCPF, (request, response) =>{
 
 })
 
+//estrato por data
+app.get("/statement/date", verifyIfExistsAccountCPF, (request, response) =>{ 
+    
+    const { customer } = request;
+    const {date} = request.query;
+
+    const dateFormat = new Date(date + " 00:00")
+
+    const statement =  customer.statment.filter((statement) => statement.created_at.toDateString() === new Date(dateFormat).toDateString())
+
+    return response.json(statement)
+
+});
+
 
 app.listen(3333)
+
+
 
